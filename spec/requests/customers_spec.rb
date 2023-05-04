@@ -54,9 +54,11 @@ RSpec.describe "CustomersControllers", type: :request do
     customer = FactoryBot.create(:customer)
     customer_attributes = FactoryBot.attributes_for(:customer)
     before do
-      put "/customers/#{customer.id}",params: {customer: customer_attributes}
+      #put "/customers/#{customer.id}",params: {customer: customer_attributes}
+      #put customer_path(id: customer.id),params: {customer: customer_attributes}
     end
     it "updates an entry and redirects to the show path for the customer" do
+      put customer_path(id: customer.id),params: {customer: customer_attributes}
       expect(response).to redirect_to customer_path(id: Customer.last.id)
     end
   end
@@ -65,26 +67,22 @@ RSpec.describe "CustomersControllers", type: :request do
     
     it "does not update the customer record or redirect" do
       customer = FactoryBot.create(:customer)
-      customer_attributes = FactoryBot.attributes_for(:customer)
+      customer_attributes = {first_name:nil}#FactoryBot.attributes_for(:customer)
+      customer_attributes[:first_name]=nil
       put "/customers/#{customer.id}",params: {customer: customer_attributes}
-      expect(response).to redirect_to "/customers/#{customer.id}"
-      expect(response.status).to eq 302
+      customer.reload
+      expect(customer.first_name).to_not eq nil
+      expect(response).to_not redirect_to "/customers/#{customer.id}"
+      expect(response).to render_template(:edit)
     end
   end
   describe "delete a customer record" do
-    it 'should return status 302' do
-      customer = FactoryBot.create(:customer)
-      customer2 = FactoryBot.create(:customer)
-      delete "/customers/#{customer.id}"
-      expect(response.status).to eq 302
-    end
     it "deletes a customer record" do
       customer = FactoryBot.create(:customer)
-      customer2 = FactoryBot.create(:customer)
       expect do
         delete "/customers/#{customer.id}"
-      #expect(Customer.all).to eq customer2
       end.to change(Customer, :count).by(-1)
+      expect(response.status).to eq 302
     end
   end
 end
